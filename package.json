@@ -1,0 +1,20 @@
+{
+  "name": "typing-race",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w server\" \"npm run dev -w client\"",
+    "dev:lan": "node scripts/dev-lan.mjs",
+    "check:lan": "node scripts/check-lan.mjs",
+    "open-firewall": "scripts/open-firewall.bat",
+    "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
+    "start": "npm run start -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
