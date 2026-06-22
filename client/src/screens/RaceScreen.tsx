@@ -240,7 +240,7 @@ export function RaceScreen({
                   ) : inGrace ? (
                     <span className="text-amber-300">Study the word — {(graceMsLeft / 1000).toFixed(1)}s until go</span>
                   ) : (
-                    <span>Type the word exactly (lowercase)</span>
+                    <span>Type exactly — capitals matter</span>
                   )}
                 </span>
               </div>

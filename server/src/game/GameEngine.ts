@@ -153,7 +153,7 @@ export class GameEngine {
     const entry = active.progress.get(socketId);
     if (!entry || entry.finished) return;
 
-    const normalized = typed.trim().toLowerCase();
+    const normalized = typed.trim();
     if (normalized !== room.currentRound.word) return;
 
     const finishTimeMs = room.currentRound.startedAt + Math.min(

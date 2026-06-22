@@ -15,14 +15,19 @@ export default {
           glow: '#22d3ee',
         },
       },
-      animation: {
-        pulseGlow: 'pulseGlow 2s ease-in-out infinite',
-      },
       keyframes: {
         pulseGlow: {
           '0%, 100%': { boxShadow: '0 0 20px rgba(34, 211, 238, 0.2)' },
           '50%': { boxShadow: '0 0 40px rgba(34, 211, 238, 0.5)' },
         },
+        ribbonFall: {
+          '0%': { transform: 'translateY(-10vh) rotate(0deg)', opacity: 1 },
+          '100%': { transform: 'translateY(110vh) rotate(720deg)', opacity: 0.2 },
+        },
+      },
+      animation: {
+        pulseGlow: 'pulseGlow 2s ease-in-out infinite',
+        'ribbon-fall': 'ribbonFall linear forwards',
       },
     },
   },

@@ -305,7 +305,7 @@ export function useSoloGame() {
     (typed: string, clientElapsedMs: number) => {
       const entry = progressRef.current.get(HUMAN_ID);
       if (!entry || entry.finished || !currentWordRef.current) return;
-      if (typed.trim().toLowerCase() !== currentWordRef.current) return;
+      if (typed.trim() !== currentWordRef.current) return;
 
       const finishTimeMs = roundStartedAtRef.current + Math.min(
         clientElapsedMs,
