@@ -73,6 +73,44 @@ If you prefer to configure it yourself:
 3. Run `npm run dev`
 4. Share `http://192.168.1.42:5173` with friends
 
+## Deploy updates (why local works but live site doesn't)
+
+Your code is on GitHub **`master`**. Two separate hosts must both redeploy:
+
+| What changed | Where it runs | Host |
+|--------------|---------------|------|
+| UI (podium, confetti, solo, etc.) | React app | **Vercel** ← friends open this URL |
+| API / multiplayer | Socket.io server | **Render** ← do not share this URL |
+
+**Opening `https://typing-race-d9ix.onrender.com` will NOT show the game UI** — that is the server only.
+
+### After every `git push`
+
+1. **Render** → Dashboard → your service → **Events** → confirm latest deploy succeeded (branch **`master`**)
+2. **Vercel** → Project → **Deployments** → confirm latest deploy succeeded
+3. Hard-refresh the Vercel URL: **Ctrl+Shift+R**
+
+### If Render didn't auto-deploy
+
+Render dashboard → **Manual Deploy** → **Deploy latest commit**
+
+### If you never set up Vercel (most common)
+
+Client changes will **only** appear locally until Vercel exists:
+
+1. [vercel.com](https://vercel.com) → **Add New Project** → import `rathrolla/typing-race`
+2. **Production branch:** `master`
+3. **Environment variable:** `VITE_SOCKET_URL` = `https://typing-race-d9ix.onrender.com`
+4. Deploy → share the `*.vercel.app` URL
+
+Root `vercel.json` in this repo configures the monorepo build automatically.
+
+### If Vercel build fails
+
+Check deployment logs. Common fix: Settings → General → **Root Directory** leave empty (use repo root + `vercel.json`).
+
+---
+
 ## Play Over the Internet
 
 `localhost` and LAN IPs only work on your network. For friends elsewhere, deploy both parts:

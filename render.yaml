@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: typing-race-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build -w shared && npm run build -w server
+    startCommand: npm run start -w server
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
