@@ -19,7 +19,7 @@ export const ServerEvents = {
 } as const;
 
 export interface RoomCreatePayload {
-  maxPlayers: 4 | 8;
+  maxPlayers: number;
   displayName: string;
   sessionId?: string;
 }

@@ -115,7 +115,7 @@ export function useSocket() {
     setState((s) => ({ ...s, error: null }));
   }, []);
 
-  const createRoom = useCallback((displayName: string, maxPlayers: 4 | 8) => {
+  const createRoom = useCallback((displayName: string, maxPlayers: number) => {
     socketRef.current?.emit(ClientEvents.ROOM_CREATE, {
       displayName,
       maxPlayers,
@@ -136,7 +136,7 @@ export function useSocket() {
     setState(initialState);
   }, []);
 
-  const setMaxPlayers = useCallback((maxPlayers: 4 | 8) => {
+  const setMaxPlayers = useCallback((maxPlayers: number) => {
     socketRef.current?.emit(ClientEvents.ROOM_SET_MAX_PLAYERS, { maxPlayers });
   }, []);
 

@@ -1,7 +1,11 @@
 import { randomUUID } from 'crypto';
 import {
+  MIN_PLAYERS,
+  MAX_PLAYERS,
   PLAYER_COLORS,
   ROOM_CODE_LENGTH,
+  clampPlayerCount,
+  isValidPlayerCount,
   type MaxPlayers,
   type Player,
   type RoomState,
@@ -36,6 +40,10 @@ export class RoomManager {
     maxPlayers: MaxPlayers,
     sessionId?: string
   ): RoomState {
+    if (!isValidPlayerCount(maxPlayers)) {
+      throw new Error(`Player count must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}`);
+    }
+    const resolvedMax = clampPlayerCount(maxPlayers);
     const resolvedSession = resolveSessionId(sessionId);
     const roomCode = generateRoomCode();
     const host: Player = {
@@ -49,7 +57,7 @@ export class RoomManager {
 
     const room: RoomState = {
       roomCode,
-      maxPlayers,
+      maxPlayers: resolvedMax,
       hostId: socketId,
       status: 'lobby',
       players: [host],
@@ -160,9 +168,13 @@ export class RoomManager {
     if (!room) throw new Error('Not in a room');
     if (room.hostId !== socketId) throw new Error('Only host can change player count');
     if (room.status !== 'lobby') throw new Error('Cannot change after game started');
-    if (room.players.length > maxPlayers) throw new Error('Too many players in room');
+    if (!isValidPlayerCount(maxPlayers)) {
+      throw new Error(`Player count must be between ${MIN_PLAYERS} and ${MAX_PLAYERS}`);
+    }
+    const resolvedMax = clampPlayerCount(maxPlayers);
+    if (room.players.length > resolvedMax) throw new Error('Too many players in room');
 
-    room.maxPlayers = maxPlayers;
+    room.maxPlayers = resolvedMax;
     return room;
   }
 
@@ -180,7 +192,7 @@ export class RoomManager {
   canStart(room: RoomState): boolean {
     const connected = room.players.filter((p) => p.connected);
     return (
-      connected.length === room.maxPlayers &&
+      connected.length >= MIN_PLAYERS &&
       connected.every((p) => p.ready)
     );
   }

@@ -240,7 +240,7 @@ export class GameEngine {
 export const gameEngine = new GameEngine();
 
 export function registerGameHandlers(io: Server, socket: Socket): void {
-  socket.on(ClientEvents.ROOM_CREATE, (payload: { maxPlayers: 4 | 8; displayName: string; sessionId?: string }) => {
+  socket.on(ClientEvents.ROOM_CREATE, (payload: { maxPlayers: number; displayName: string; sessionId?: string }) => {
     try {
       const room = roomManager.createRoom(socket.id, payload.displayName, payload.maxPlayers, payload.sessionId);
       socket.join(room.roomCode);
@@ -270,7 +270,7 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
     }
   });
 
-  socket.on(ClientEvents.ROOM_SET_MAX_PLAYERS, (payload: { maxPlayers: 4 | 8 }) => {
+  socket.on(ClientEvents.ROOM_SET_MAX_PLAYERS, (payload: { maxPlayers: number }) => {
     try {
       const room = roomManager.setMaxPlayers(socket.id, payload.maxPlayers);
       broadcastRoom(io, room, false);

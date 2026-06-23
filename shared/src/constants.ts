@@ -19,3 +19,15 @@ export const PLAYER_COLORS = [
 ] as const;
 
 export const ROOM_CODE_LENGTH = 6;
+
+export const MIN_PLAYERS = 2;
+export const MAX_PLAYERS = 8;
+export const PLAYER_COUNT_OPTIONS = [2, 3, 4, 5, 6, 7, 8] as const;
+
+export function clampPlayerCount(count: number): number {
+  return Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Math.round(count)));
+}
+
+export function isValidPlayerCount(count: number): boolean {
+  return Number.isInteger(count) && count >= MIN_PLAYERS && count <= MAX_PLAYERS;
+}

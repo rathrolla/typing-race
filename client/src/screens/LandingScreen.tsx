@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import type { useSocket } from '../hooks/useSocket';
+import { PlayerCountPicker } from '../components/PlayerCountPicker';
 
 interface Props {
   socket: ReturnType<typeof useSocket>;
@@ -11,7 +12,7 @@ export function LandingScreen({ socket, onPlaySolo }: Props) {
   const [mode, setMode] = useState<'home' | 'create' | 'join'>('home');
   const [displayName, setDisplayName] = useState('');
   const [roomCode, setRoomCode] = useState('');
-  const [maxPlayers, setMaxPlayers] = useState<4 | 8>(4);
+  const [maxPlayers, setMaxPlayers] = useState(4);
 
   const handleCreate = () => {
     if (!displayName.trim()) return;
@@ -40,7 +41,7 @@ export function LandingScreen({ socket, onPlaySolo }: Props) {
             <span className="text-cyan-400">Typing</span> Race
           </h1>
           <p className="text-slate-400 text-lg">
-            Solo practice · vs Computer · 4–8 player online
+            Solo practice · vs Computer · 2–8 player online
           </p>
         </motion.div>
 
@@ -70,21 +71,8 @@ export function LandingScreen({ socket, onPlaySolo }: Props) {
                 maxLength={20}
                 autoFocus
               />
-              <div className="flex gap-3">
-                {([4, 8] as const).map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setMaxPlayers(n)}
-                    className={`flex-1 py-3 rounded-xl border font-semibold transition-colors ${
-                      maxPlayers === n
-                        ? 'border-cyan-400 bg-cyan-400/10 text-cyan-300'
-                        : 'border-arcade-border text-slate-400 hover:border-slate-500'
-                    }`}
-                  >
-                    {n} Players
-                  </button>
-                ))}
-              </div>
+              <p className="text-sm text-slate-400">Max players in room</p>
+              <PlayerCountPicker value={maxPlayers} onChange={setMaxPlayers} />
               <div className="flex gap-3">
                 <button className="btn-secondary flex-1" onClick={() => setMode('home')}>
                   Back

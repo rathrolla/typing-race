@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import type { ClientRoomState } from '@typing-race/shared';
+import { MIN_PLAYERS, type ClientRoomState } from '@typing-race/shared';
 import type { useSocket } from '../hooks/useSocket';
 import { PlayerAvatar } from '../components/PlayerAvatar';
+import { PlayerCountPicker } from '../components/PlayerCountPicker';
 
 interface Props {
   socket: ReturnType<typeof useSocket>;
@@ -14,7 +15,7 @@ export function LobbyScreen({ socket, room }: Props) {
   const isHost = room.playerId === room.hostId;
   const connectedCount = room.players.filter((p) => p.connected).length;
   const allReady = room.players.filter((p) => p.connected).every((p) => p.ready);
-  const canStart = isHost && connectedCount === room.maxPlayers && allReady;
+  const canStart = isHost && connectedCount >= MIN_PLAYERS && allReady;
 
   const me = room.players.find((p) => p.id === room.playerId);
 
@@ -50,21 +51,15 @@ export function LobbyScreen({ socket, room }: Props) {
             </div>
           </div>
 
-          {isHost && room.players.length <= 1 && (
-            <div className="flex gap-2">
-              {([4, 8] as const).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => socket.setMaxPlayers(n)}
-                  className={`px-4 py-2 rounded-lg border text-sm font-medium ${
-                    room.maxPlayers === n
-                      ? 'border-cyan-400 text-cyan-300'
-                      : 'border-arcade-border text-slate-400'
-                  }`}
-                >
-                  {n} players
-                </button>
-              ))}
+          {isHost && (
+            <div>
+              <p className="text-slate-400 text-sm mb-2">Max players</p>
+              <PlayerCountPicker
+                value={room.maxPlayers}
+                onChange={(n) => socket.setMaxPlayers(n)}
+                minAllowed={room.players.length}
+                compact
+              />
             </div>
           )}
         </div>
@@ -130,7 +125,11 @@ export function LobbyScreen({ socket, room }: Props) {
 
         <p className="text-center text-slate-500 text-sm mt-6">
           {connectedCount}/{room.maxPlayers} players ·{' '}
-          {canStart ? 'All ready — launch when you are!' : 'Waiting for all players to ready up'}
+          {canStart
+            ? 'Everyone ready — start when you are!'
+            : connectedCount < MIN_PLAYERS
+              ? `Need at least ${MIN_PLAYERS} players to start`
+              : 'Waiting for everyone to ready up'}
         </p>
       </div>
     </motion.div>

@@ -1,5 +1,5 @@
 export type RoomStatus = 'lobby' | 'playing' | 'finished';
-export type MaxPlayers = 4 | 8;
+export type MaxPlayers = number;
 
 export interface Player {
   id: string;
