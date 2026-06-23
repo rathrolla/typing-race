@@ -105,9 +105,15 @@ Client changes will **only** appear locally until Vercel exists:
 
 Root `vercel.json` in this repo configures the monorepo build automatically.
 
-### If Vercel build fails
+### If Vercel build fails with `No workspaces found: --workspace=shared`
 
-Check deployment logs. Common fix: Settings → General → **Root Directory** leave empty (use repo root + `vercel.json`).
+Vercel is running the build from the wrong folder. Fix **one** of these:
+
+**Option A (recommended):** Project → Settings → General → **Root Directory** → leave **empty** (repo root). Redeploy.
+
+**Option B:** Set Root Directory to **`client`** — the repo includes `client/vercel.json` which installs from the monorepo root automatically.
+
+Also clear any custom **Build Command** in Vercel project settings so `vercel.json` controls the build.
 
 ---
 

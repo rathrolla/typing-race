@@ -12,6 +12,7 @@
     "check:lan": "node scripts/check-lan.mjs",
     "open-firewall": "scripts/open-firewall.bat",
     "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
+    "build:vercel": "npm run build -w shared && npm run build -w client",
     "start": "npm run start -w server"
   },
   "devDependencies": {
