@@ -9,6 +9,7 @@ import {
   type MaxPlayers,
   type Player,
   type RoomState,
+  type TypingMode,
 } from '@typing-race/shared';
 
 const rooms = new Map<string, RoomState>();
@@ -58,6 +59,7 @@ export class RoomManager {
     const room: RoomState = {
       roomCode,
       maxPlayers: resolvedMax,
+      typingMode: 'mixed',
       hostId: socketId,
       status: 'lobby',
       players: [host],
@@ -175,6 +177,31 @@ export class RoomManager {
     if (room.players.length > resolvedMax) throw new Error('Too many players in room');
 
     room.maxPlayers = resolvedMax;
+    return room;
+  }
+
+  setTypingMode(socketId: string, typingMode: TypingMode): RoomState {
+    const room = this.getRoomByPlayer(socketId);
+    if (!room) throw new Error('Not in a room');
+    if (room.hostId !== socketId) throw new Error('Only host can change typing mode');
+    if (room.status !== 'lobby') throw new Error('Cannot change after game started');
+
+    room.typingMode = typingMode;
+    return room;
+  }
+
+  resetToLobby(roomCode: string): RoomState | null {
+    const room = rooms.get(roomCode);
+    if (!room || room.status !== 'finished') return null;
+
+    room.status = 'lobby';
+    room.currentRound = null;
+    room.roundResults = [];
+    room.liveProgress = [];
+    room.finalStandings = null;
+    for (const player of room.players) {
+      player.ready = false;
+    }
     return room;
   }
 

@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ROUND_LENGTHS,
-  TOTAL_ROUNDS,
+  getRoundLengths,
+  getTimeoutMs,
   ROUND_REVEAL_MS,
   calculateWpm,
   computeStandings,
-  getTimeoutMs,
   PLAYER_COLORS,
   rankRoundResults,
   type GameOverPayload,
   type PlayerProgress,
   type RoundEndPayload,
   type RoundResult,
+  type TypingMode,
 } from '@typing-race/shared';
 import {
   createBots,
@@ -21,7 +21,7 @@ import {
   type SoloDifficulty,
   type SoloRacer,
 } from '../lib/botRacer';
-import { fetchWord, resetWordCache } from '../lib/fetchWord';
+import { fetchChallenge, resetWordCache } from '../lib/fetchWord';
 
 export const HUMAN_ID = 'human';
 
@@ -32,6 +32,7 @@ export interface SoloConfig {
   mode: SoloMode;
   botCount: 1 | 2 | 3;
   difficulty: SoloDifficulty;
+  typingMode: TypingMode;
 }
 
 export interface SoloGameState {
@@ -91,8 +92,8 @@ export function useSoloGame() {
   const endRound = useCallback(
     (roundIndex: number) => {
       const word = currentWordRef.current;
-      const wordLength = ROUND_LENGTHS[roundIndex];
       if (!word) return;
+      const wordLength = word.length;
 
       clearTimers();
 
@@ -155,7 +156,8 @@ export function useSoloGame() {
 
   const startRound = useCallback(
     async (roundIndex: number, config: SoloConfig, racers: SoloRacer[]) => {
-      if (roundIndex >= TOTAL_ROUNDS) {
+      const roundLengths = getRoundLengths(config.typingMode);
+      if (roundIndex >= roundLengths.length) {
         clearTimers();
         const standings = computeStandings(
           racers.map((r) => ({ id: r.id, name: r.name, color: r.color })),
@@ -171,9 +173,10 @@ export function useSoloGame() {
         return;
       }
 
-      const wordLength = ROUND_LENGTHS[roundIndex];
-      const word = await fetchWord(wordLength);
-      const timeoutMs = getTimeoutMs(wordLength);
+      const roundLength = roundLengths[roundIndex];
+      const word = await fetchChallenge(roundLength, config.typingMode);
+      const wordLength = word.length;
+      const timeoutMs = getTimeoutMs(wordLength, config.typingMode);
       const revealedAt = Date.now();
       const startedAt = revealedAt + ROUND_REVEAL_MS;
       const endsAt = startedAt + timeoutMs;
@@ -266,6 +269,7 @@ export function useSoloGame() {
       clearTimers();
       resetWordCache();
       roundResultsRef.current = [];
+      currentWordRef.current = null;
 
       const human: SoloRacer = {
         id: HUMAN_ID,

@@ -1,3 +1,5 @@
+import type { TypingMode } from './types.js';
+
 /** Apply random uppercase letters to a lowercase word (at least one capital for length >= 3). */
 export function applyMixedCase(word: string): string {
   const lower = word.toLowerCase();
@@ -21,6 +23,28 @@ export function applyMixedCase(word: string): string {
   }
 
   return chars.join('');
+}
+
+export function applyWordCasing(word: string, mode: TypingMode): string {
+  const lower = word.toLowerCase();
+  switch (mode) {
+    case 'mixed':
+      return applyMixedCase(lower);
+    case 'uppercase':
+      return lower.toUpperCase();
+    case 'lowercase':
+      return lower;
+    case 'paragraph':
+      return lower;
+  }
+}
+
+export function buildParagraph(words: string[], mode: TypingMode): string {
+  const cased =
+    mode === 'paragraph'
+      ? words.map((w) => w.toLowerCase())
+      : words.map((w) => applyWordCasing(w, mode));
+  return cased.join(' ');
 }
 
 export function normalizeWordKey(word: string): string {

@@ -9,6 +9,7 @@ import { PodiumScreen } from './screens/PodiumScreen';
 import { RoundInterstitial } from './screens/RoundInterstitial';
 import { SoloSetupScreen } from './screens/SoloSetupScreen';
 import { SoloLoadingScreen } from './screens/SoloLoadingScreen';
+import { getTotalRounds } from '@typing-race/shared';
 import type { SoloConfig } from './hooks/useSoloGame';
 
 type AppMode = 'multiplayer' | 'solo';
@@ -117,6 +118,8 @@ export default function App() {
             playerId={state.room.playerId ?? ''}
             onProgress={socket.sendProgress}
             onSubmit={socket.submitWord}
+            totalRounds={getTotalRounds(state.room.typingMode)}
+            typingMode={state.room.typingMode}
           />
         )}
 
@@ -128,7 +131,7 @@ export default function App() {
           <PodiumScreen
             key="multi-podium"
             standings={state.gameOver?.standings ?? state.room.finalStandings ?? []}
-            onPlayAgain={() => socket.leaveRoom()}
+            onPlayAgain={() => socket.playAgain()}
             onLeave={goHome}
           />
         )}
@@ -159,6 +162,8 @@ export default function App() {
             playerId={HUMAN_ID}
             onProgress={solo.updateProgress}
             onSubmit={solo.submitWord}
+            totalRounds={solo.state.config ? getTotalRounds(solo.state.config.typingMode) : 10}
+            typingMode={solo.state.config?.typingMode ?? 'mixed'}
           />
         )}
 

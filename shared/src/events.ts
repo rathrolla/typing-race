@@ -7,6 +7,8 @@ export const ClientEvents = {
   ROUND_SUBMIT: 'round:submit',
   PLAYER_PROGRESS: 'player:progress',
   ROOM_SET_MAX_PLAYERS: 'room:setMaxPlayers',
+  ROOM_SET_TYPING_MODE: 'room:setTypingMode',
+  GAME_PLAY_AGAIN: 'game:playAgain',
 } as const;
 
 export const ServerEvents = {

@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { MIN_PLAYERS, type ClientRoomState } from '@typing-race/shared';
+import { MIN_PLAYERS, TYPING_MODE_OPTIONS, type ClientRoomState } from '@typing-race/shared';
 import type { useSocket } from '../hooks/useSocket';
 import { PlayerAvatar } from '../components/PlayerAvatar';
 import { PlayerCountPicker } from '../components/PlayerCountPicker';
+import { TypingModePicker } from '../components/TypingModePicker';
 
 interface Props {
   socket: ReturnType<typeof useSocket>;
@@ -26,6 +27,9 @@ export function LobbyScreen({ socket, room }: Props) {
   };
 
   const emptySlots = room.maxPlayers - room.players.length;
+
+  const typingModeLabel =
+    TYPING_MODE_OPTIONS.find((o) => o.id === room.typingMode)?.label ?? room.typingMode;
 
   return (
     <motion.div
@@ -61,6 +65,20 @@ export function LobbyScreen({ socket, room }: Props) {
                 compact
               />
             </div>
+          )}
+        </div>
+
+        <div className="panel p-5 mb-8">
+          <p className="text-slate-400 text-sm mb-3">
+            Typing style {isHost ? '(host picks for everyone)' : `· ${typingModeLabel}`}
+          </p>
+          {isHost ? (
+            <TypingModePicker
+              value={room.typingMode}
+              onChange={(mode) => socket.setTypingMode(mode)}
+            />
+          ) : (
+            <p className="text-cyan-300 font-medium">{typingModeLabel}</p>
           )}
         </div>
 

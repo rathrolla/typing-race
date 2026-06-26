@@ -1,5 +1,6 @@
 export type RoomStatus = 'lobby' | 'playing' | 'finished';
 export type MaxPlayers = number;
+export type TypingMode = 'mixed' | 'uppercase' | 'lowercase' | 'paragraph';
 
 export interface Player {
   id: string;
@@ -57,6 +58,7 @@ export interface PlayerStanding {
 export interface RoomState {
   roomCode: string;
   maxPlayers: MaxPlayers;
+  typingMode: TypingMode;
   hostId: string;
   status: RoomStatus;
   players: Player[];

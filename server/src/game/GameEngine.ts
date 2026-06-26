@@ -1,11 +1,11 @@
 import {
   ClientEvents,
-  ROUND_LENGTHS,
+  getRoundLengths,
+  getTimeoutMs,
   ROUND_REVEAL_MS,
   ServerEvents,
   calculateWpm,
   computeStandings,
-  getTimeoutMs,
   rankRoundResults,
   sanitizeRoomForClient,
   type PlayerProgress,
@@ -13,7 +13,7 @@ import {
   type RoundResult,
 } from '@typing-race/shared';
 import type { Server, Socket } from 'socket.io';
-import { fetchWord, resetWordCache } from '../words/fetchWord.js';
+import { fetchChallenge, resetWordCache } from '../words/fetchWord.js';
 import { roomManager } from './RoomManager.js';
 
 interface ActiveRound {
@@ -58,7 +58,7 @@ function emitToRoom(io: Server, roomCode: string, event: string, payload: unknow
 export class GameEngine {
   async startGame(io: Server, socket: Socket, room: RoomState): Promise<void> {
     if (!roomManager.canStart(room)) {
-      socket.emit(ServerEvents.ERROR, { message: 'All players must be ready and room must be full' });
+      socket.emit(ServerEvents.ERROR, { message: 'Need at least 2 players and everyone ready' });
       return;
     }
 
@@ -74,14 +74,16 @@ export class GameEngine {
   }
 
   async startRound(io: Server, room: RoomState, roundIndex: number): Promise<void> {
-    if (roundIndex >= ROUND_LENGTHS.length) {
+    const roundLengths = getRoundLengths(room.typingMode);
+    if (roundIndex >= roundLengths.length) {
       await this.endGame(io, room);
       return;
     }
 
-    const wordLength = ROUND_LENGTHS[roundIndex];
-    const word = await fetchWord(wordLength);
-    const timeoutMs = getTimeoutMs(wordLength);
+    const roundLength = roundLengths[roundIndex];
+    const word = await fetchChallenge(roundLength, room.typingMode);
+    const wordLength = word.length;
+    const timeoutMs = getTimeoutMs(wordLength, room.typingMode);
     const revealedAt = Date.now();
     const startedAt = revealedAt + ROUND_REVEAL_MS;
     const endsAt = startedAt + timeoutMs;
@@ -134,7 +136,7 @@ export class GameEngine {
     const entry = active.progress.get(socketId);
     if (!entry || entry.finished) return;
 
-    entry.charsCorrect = Math.min(charsCorrect, room.currentRound.wordLength);
+    entry.charsCorrect = Math.min(charsCorrect, room.currentRound.word.length);
     room.liveProgress = [...active.progress.values()];
     roomManager.updateRoom(room);
   }
@@ -163,8 +165,8 @@ export class GameEngine {
 
     entry.finished = true;
     entry.finishTimeMs = finishTimeMs;
-    entry.charsCorrect = room.currentRound.wordLength;
-    entry.wpm = calculateWpm(room.currentRound.wordLength, finishTimeMs - room.currentRound.startedAt);
+    entry.charsCorrect = room.currentRound.word.length;
+    entry.wpm = calculateWpm(room.currentRound.word.length, finishTimeMs - room.currentRound.startedAt);
     room.liveProgress = [...active.progress.values()];
     roomManager.updateRoom(room);
 
@@ -227,6 +229,14 @@ export class GameEngine {
     broadcastRoom(io, room);
   }
 
+  playAgain(io: Server, room: RoomState): void {
+    this.cleanupRoom(room.roomCode);
+    const reset = roomManager.resetToLobby(room.roomCode);
+    if (!reset) return;
+    roomManager.updateRoom(reset);
+    broadcastRoom(io, reset);
+  }
+
   cleanupRoom(roomCode: string): void {
     const active = activeRounds.get(roomCode);
     if (active) {
@@ -279,6 +289,15 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
     }
   });
 
+  socket.on(ClientEvents.ROOM_SET_TYPING_MODE, (payload: { typingMode: import('@typing-race/shared').TypingMode }) => {
+    try {
+      const room = roomManager.setTypingMode(socket.id, payload.typingMode);
+      broadcastRoom(io, room, false);
+    } catch (err) {
+      socket.emit(ServerEvents.ERROR, { message: err instanceof Error ? err.message : 'Failed to update typing mode' });
+    }
+  });
+
   socket.on(ClientEvents.PLAYER_READY, (payload: { ready: boolean }) => {
     try {
       const room = roomManager.setReady(socket.id, payload.ready);
@@ -286,6 +305,19 @@ export function registerGameHandlers(io: Server, socket: Socket): void {
     } catch (err) {
       socket.emit(ServerEvents.ERROR, { message: err instanceof Error ? err.message : 'Failed to set ready' });
     }
+  });
+
+  socket.on(ClientEvents.GAME_PLAY_AGAIN, () => {
+    const room = roomManager.getRoomByPlayer(socket.id);
+    if (!room) {
+      socket.emit(ServerEvents.ERROR, { message: 'Not in a room' });
+      return;
+    }
+    if (room.status !== 'finished') {
+      socket.emit(ServerEvents.ERROR, { message: 'Game is still in progress' });
+      return;
+    }
+    gameEngine.playAgain(io, room);
   });
 
   socket.on(ClientEvents.GAME_START, () => {

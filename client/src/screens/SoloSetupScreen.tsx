@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import type { SoloConfig, SoloDifficulty, SoloMode } from '../hooks/useSoloGame';
+import { TypingModePicker } from '../components/TypingModePicker';
+import type { TypingMode } from '@typing-race/shared';
 
 interface Props {
   onStart: (config: SoloConfig) => void;
@@ -12,6 +14,7 @@ export function SoloSetupScreen({ onStart, onBack }: Props) {
   const [mode, setMode] = useState<SoloMode>('practice');
   const [botCount, setBotCount] = useState<1 | 2 | 3>(2);
   const [difficulty, setDifficulty] = useState<SoloDifficulty>('medium');
+  const [typingMode, setTypingMode] = useState<TypingMode>('mixed');
 
   const handleStart = () => {
     onStart({
@@ -19,6 +22,7 @@ export function SoloSetupScreen({ onStart, onBack }: Props) {
       mode,
       botCount,
       difficulty,
+      typingMode,
     });
   };
 
@@ -102,6 +106,11 @@ export function SoloSetupScreen({ onStart, onBack }: Props) {
               </div>
             </>
           )}
+
+          <div>
+            <p className="text-sm text-slate-400 mb-2">Typing style</p>
+            <TypingModePicker value={typingMode} onChange={setTypingMode} />
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button className="btn-secondary flex-1" onClick={onBack}>

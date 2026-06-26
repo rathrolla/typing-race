@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TOTAL_ROUNDS, ROUND_REVEAL_MS, calculateWpm, type PlayerProgress } from '@typing-race/shared';
+import { ROUND_REVEAL_MS, calculateWpm, type PlayerProgress, type TypingMode } from '@typing-race/shared';
 import { WordStage } from '../components/WordStage';
 import { WordDisplay } from '../components/WordDisplay';
 import { GraceCountdown } from '../components/GraceCountdown';
@@ -23,6 +23,8 @@ interface Props {
   racers: RaceRacer[];
   liveProgress: PlayerProgress[];
   playerId: string;
+  totalRounds: number;
+  typingMode: TypingMode;
   onProgress: (charsCorrect: number) => void;
   onSubmit: (typed: string, clientElapsedMs: number) => void;
 }
@@ -37,6 +39,8 @@ export function RaceScreen({
   racers,
   liveProgress,
   playerId,
+  totalRounds,
+  typingMode,
   onProgress,
   onSubmit,
 }: Props) {
@@ -51,6 +55,8 @@ export function RaceScreen({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const inGrace = !graceDone;
+  const isParagraph = typingMode === 'paragraph';
+  const charCount = word.length;
   const secondsLeft = (remainingMs / 1000).toFixed(1);
   const urgency = remainingMs < 3000 && graceDone;
   const myProgress = liveProgress.find((p) => p.playerId === playerId);
@@ -175,10 +181,11 @@ export function RaceScreen({
       <header className="p-4 md:px-8 flex flex-wrap items-center justify-between gap-4 border-b border-arcade-border">
         <div className="flex items-center gap-4">
           <span className="text-slate-400 text-sm">
-            Round <span className="text-white font-semibold">{roundIndex + 1}</span>/{TOTAL_ROUNDS}
+            Round <span className="text-white font-semibold">{roundIndex + 1}</span>/{totalRounds}
           </span>
           <span className="text-slate-400 text-sm">
-            <span className="text-cyan-300 font-semibold">{wordLength}</span> letters
+            <span className="text-cyan-300 font-semibold">{isParagraph ? charCount : wordLength}</span>{' '}
+            {isParagraph ? 'characters' : 'letters'}
           </span>
         </div>
         <div
@@ -201,7 +208,7 @@ export function RaceScreen({
               roundComplete={roundComplete}
               timedOut={timedOut}
             />
-            <WordDisplay word={word} typedLength={typed.length} />
+            <WordDisplay word={word} typedLength={typed.length} isParagraph={isParagraph} />
             <GraceCountdown graceMsLeft={graceMsLeft} visible={inGrace} />
           </div>
 
@@ -239,6 +246,8 @@ export function RaceScreen({
                     <span className="text-red-400">Time&apos;s up!</span>
                   ) : inGrace ? (
                     <span className="text-amber-300">Study the word — {(graceMsLeft / 1000).toFixed(1)}s until go</span>
+                  ) : isParagraph ? (
+                    <span>Type exactly — spaces and capitals matter</span>
                   ) : (
                     <span>Type exactly — capitals matter</span>
                   )}
@@ -255,7 +264,7 @@ export function RaceScreen({
               {racers.map((player) => {
                 const progress = liveProgress.find((p) => p.playerId === player.id);
                 const pct = progress
-                  ? Math.round((progress.charsCorrect / wordLength) * 100)
+                  ? Math.round((progress.charsCorrect / charCount) * 100)
                   : 0;
                 return (
                   <div key={player.id} className="panel p-3">

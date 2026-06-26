@@ -8,6 +8,7 @@ import {
   type RoundEndPayload,
   type RoundStartPayload,
   type RoundTickPayload,
+  type TypingMode,
 } from '@typing-race/shared';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3002';
@@ -65,6 +66,8 @@ export function useSocket() {
       setState((s) => ({
         ...s,
         room,
+        roundWord: room.status === 'lobby' ? null : s.roundWord,
+        lastRoundResult: room.status === 'lobby' ? null : s.lastRoundResult,
         gameOver: room.status === 'finished' ? s.gameOver : null,
       }));
     });
@@ -140,6 +143,20 @@ export function useSocket() {
     socketRef.current?.emit(ClientEvents.ROOM_SET_MAX_PLAYERS, { maxPlayers });
   }, []);
 
+  const setTypingMode = useCallback((typingMode: TypingMode) => {
+    socketRef.current?.emit(ClientEvents.ROOM_SET_TYPING_MODE, { typingMode });
+  }, []);
+
+  const playAgain = useCallback(() => {
+    setState((s) => ({
+      ...s,
+      roundWord: null,
+      lastRoundResult: null,
+      gameOver: null,
+    }));
+    socketRef.current?.emit(ClientEvents.GAME_PLAY_AGAIN);
+  }, []);
+
   const setReady = useCallback((ready: boolean) => {
     socketRef.current?.emit(ClientEvents.PLAYER_READY, { ready });
   }, []);
@@ -163,6 +180,8 @@ export function useSocket() {
     joinRoom,
     leaveRoom,
     setMaxPlayers,
+    setTypingMode,
+    playAgain,
     setReady,
     startGame,
     sendProgress,
